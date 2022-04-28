@@ -1,4 +1,4 @@
-module github.com/EugeneTitarchuk/libbuildpack-sealights
+module github.com/Sealights/libbuildpack-sealights
 
 go 1.18
 
