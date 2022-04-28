@@ -13,16 +13,16 @@ type VcapServicesModel struct {
 }
 
 type SealightsOptions struct {
-	Version         string
-	Token           string
-	TokenFile       string
-	BsId            string
-	BsIdFile        string
-	Target          string
-	WorkingDir      string
-	TargetArgs      string
-	ProfileLogDir   string
-	ProfileLogLevel string
+	Version          string
+	Token            string
+	TokenFile        string
+	BsId             string
+	BsIdFile         string
+	Target           string
+	WorkingDir       string
+	TargetArgs       string
+	ProfilerLogDir   string
+	ProfilerLogLevel string
 }
 
 type Configuration struct {
@@ -67,16 +67,16 @@ func (conf Configuration) parseVcapServices() {
 			}
 
 			options := &SealightsOptions{
-				Version:         queryString("version"),
-				Token:           queryString("token"),
-				TokenFile:       queryString("tokenFile"),
-				BsId:            queryString("bsId"),
-				BsIdFile:        queryString("bsIdFile"),
-				Target:          queryString("target"),
-				WorkingDir:      queryString("workingDir"),
-				TargetArgs:      queryString("targetArgs"),
-				ProfileLogDir:   queryString("profileLogDir"),
-				ProfileLogLevel: queryString("profileLogLevel"),
+				Version:          queryString("version"),
+				Token:            queryString("token"),
+				TokenFile:        queryString("tokenFile"),
+				BsId:             queryString("bsId"),
+				BsIdFile:         queryString("bsIdFile"),
+				Target:           queryString("target"),
+				WorkingDir:       queryString("workingDir"),
+				TargetArgs:       queryString("targetArgs"),
+				ProfilerLogDir:   queryString("profilerLogDir"),
+				ProfilerLogLevel: queryString("profilerLogLevel"),
 			}
 
 			isTokenProvided := options.Token != "" && options.TokenFile != ""
