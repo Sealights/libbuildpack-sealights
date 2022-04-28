@@ -3,6 +3,7 @@ package sealights
 import (
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/cloudfoundry/libbuildpack"
 )
@@ -35,15 +36,21 @@ func (h *SealightsHook) AfterCompile(stager *libbuildpack.Stager) error {
 
 	conf := NewConfiguration(h.Log)
 	if !conf.UseSealights() {
-		h.Log.Debug("Sealights. Service disabled")
+		h.Log.Debug("Sealights service isn't configured")
 		return nil
 	}
 
 	h.Log.Info("Sealights. Service enabled")
 
-
+	installationPath := filepath.Join(stager.DepDir(), "sealights")
 	installer := NewInstaller(h.Log, conf.Value)
-	installer.InstallAgent()
+	err := installer.InstallAgent(installationPath)
+	if (err != nil){
+		return err
+	}
+
+	launcher := NewLauncher(h.Log, conf.Value, installationPath)
+	launcher.ModifyStartParameters(stager)
 
 	// Get buildpack version and language
 

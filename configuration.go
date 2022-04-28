@@ -43,7 +43,7 @@ func (conf Configuration) UseSealights() bool {
 	return conf.Value != nil
 }
 
-func (conf Configuration) parseVcapServices() {
+func (conf *Configuration) parseVcapServices() {
 
 	var vcapServices map[string][]struct {
 		Name        string                 `json:"name"`
@@ -81,13 +81,13 @@ func (conf Configuration) parseVcapServices() {
 				ProfilerLogLevel: queryString("profilerLogLevel"),
 			}
 
-			isTokenProvided := options.Token != "" && options.TokenFile != ""
+			isTokenProvided := options.Token != "" || options.TokenFile != ""
 			if !isTokenProvided {
 				conf.Log.Warning("Sealights access token isn't provided")
 				return
 			}
 
-			isSessionIdProvided := options.BsId != "" && options.BsIdFile != ""
+			isSessionIdProvided := options.BsId != "" || options.BsIdFile != ""
 			if !isSessionIdProvided {
 				conf.Log.Warning("Sealights build session id isn't provided")
 				return
