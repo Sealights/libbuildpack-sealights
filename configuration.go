@@ -23,6 +23,8 @@ type SealightsOptions struct {
 	TargetArgs       string
 	ProfilerLogDir   string
 	ProfilerLogLevel string
+	CustomAgentUrl   string
+	LabId            string
 }
 
 type Configuration struct {
