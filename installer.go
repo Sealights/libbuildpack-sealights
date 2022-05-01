@@ -32,8 +32,7 @@ func (inst *Installer) InstallAgent(installationPath string) error {
 		return err
 	}
 
-	
-	err = libbuildpack.ExtractTarGz(archivePath, installationPath)
+	err = inst.extractPackage(archivePath, installationPath)
 	if err != nil {
 		return err
 	}
@@ -44,7 +43,7 @@ func (inst *Installer) InstallAgent(installationPath string) error {
 func (inst *Installer) downloadPackage() (string, error) {
 	url := inst.getDownloadUrl()
 
-	inst.Log.Info("Sealights. Download package started. From '%s'", url)
+	inst.Log.Debug("Sealights. Download package started. From '%s'", url)
 
 	tempAgentFile := filepath.Join(os.TempDir(), PackageArchiveName)
 	err := downloadFileWithRetry(url, tempAgentFile, inst.MaxDownloadRetries)
@@ -53,18 +52,20 @@ func (inst *Installer) downloadPackage() (string, error) {
 		return "", err
 	}
 
-	inst.Log.Info("Sealights. Download finished.")
+	inst.Log.Debug("Sealights. Download finished.")
 	return tempAgentFile, nil
 }
 
 func (inst *Installer) extractPackage(source string, target string) error {
+	inst.Log.Debug("Sealights. Extract package from '%s' to '%s'", source, target)
+
 	err := libbuildpack.ExtractTarGz(source, target)
 	if err != nil {
 		inst.Log.Error("Sealights. Failed to extract package.")
 		return err
 	}
 
-	inst.Log.Info("Sealights. Package installed.")
+	inst.Log.Debug("Sealights. Package extracted.")
 	return nil
 }
 
@@ -113,7 +114,7 @@ func downloadFile(url, destFile string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return fmt.Errorf("could not download: %d", resp.StatusCode)
+		return fmt.Errorf("Could not download: %d", resp.StatusCode)
 	}
 
 	return writeToFile(resp.Body, destFile, 0666)

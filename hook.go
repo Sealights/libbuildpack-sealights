@@ -14,7 +14,7 @@ type Command interface {
 	Execute(string, io.Writer, io.Writer, string, ...string) error
 }
 
-// SealightsHook implements libbuildpack.Hook. It downloads and install the Dynatrace OneAgent.
+// SealightsHook implements libbuildpack.Hook. It downloads and install the Sealights OneAgent.
 type SealightsHook struct {
 	libbuildpack.DefaultHook
 	Log     *libbuildpack.Logger
@@ -29,7 +29,7 @@ func NewHook() libbuildpack.Hook {
 	}
 }
 
-// AfterCompile downloads and installs the Dynatrace agent.
+// AfterCompile downloads and installs the Sealights agent, and modify application start command
 func (h *SealightsHook) AfterCompile(stager *libbuildpack.Stager) error {
 
 	h.Log.Debug("Sealights. Check servicec status...")
@@ -48,20 +48,12 @@ func (h *SealightsHook) AfterCompile(stager *libbuildpack.Stager) error {
 	if err != nil {
 		return err
 	}
+	h.Log.Info("Sealights. Agent installed")
 
 	launcher := NewLauncher(h.Log, conf.Value, installationPath)
 	launcher.ModifyStartParameters(stager)
 
-	// Get buildpack version and language
-
-	lang := stager.BuildpackLanguage()
-	ver, err := stager.BuildpackVersion()
-	if err != nil {
-		h.Log.Warning("Failed to get buildpack version: %v", err)
-		ver = "unknown"
-	}
-
-	h.Log.Info("Sealights. Language: %s. Buildpack version: %s.", lang, ver)
+	h.Log.Info("Sealights. Service is set up")
 
 	return nil
 }
