@@ -39,7 +39,7 @@ func (h *SealightsHook) AfterCompile(stager *libbuildpack.Stager) error {
 		return nil
 	}
 
-	h.Log.Info("Sealights. Service enabled")
+	h.Log.Info("Sealights. Service is enabled")
 
 	agentInstaller := NewAgentInstaller(h.Log, conf.Value)
 
@@ -47,13 +47,13 @@ func (h *SealightsHook) AfterCompile(stager *libbuildpack.Stager) error {
 	if err != nil {
 		return err
 	}
-	h.Log.Info("Sealights. Agent installed")
+	h.Log.Info("Sealights. Agent is installed")
 
 	dotnetDir, err := agentInstaller.InstallDependency(stager)
 	if err != nil {
 		return err
 	}
-	h.Log.Info("Sealights. Dotnet installed")
+	h.Log.Info("Sealights. Dotnet is installed")
 
 	launcher := NewLauncher(h.Log, conf.Value, agentDir, dotnetDir)
 	launcher.ModifyStartParameters(stager)
