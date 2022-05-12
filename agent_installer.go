@@ -1,12 +1,15 @@
 package sealights
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry/libbuildpack"
@@ -44,6 +47,11 @@ func (agi *AgentInstaller) InstallAgent(stager *libbuildpack.Stager) (string, er
 }
 
 func (agi *AgentInstaller) InstallDependency(stager *libbuildpack.Stager) (string, error) {
+	if agi.isRequiredVersionInstalled(stager) {
+		agi.Log.Debug("Required dotnet version is already installed")
+		return "", nil
+	}
+
 	dependencyPath := filepath.Join(stager.BuildDir(), AgentDir, DotnetDir)
 	buildpackDir, err := libbuildpack.GetBuildpackDir()
 	if err != nil {
@@ -77,6 +85,28 @@ func (agi *AgentInstaller) InstallDependency(stager *libbuildpack.Stager) (strin
 	}
 
 	return filepath.Join("${HOME}", AgentDir, DotnetDir), nil
+}
+
+func (agi *AgentInstaller) isRequiredVersionInstalled(stager *libbuildpack.Stager) bool {
+	dotnetCliFile := filepath.Join(stager.DepDir(), "dotnet-sdk", "dotnet")
+	runtimeVersionsFile := filepath.Join(stager.DepDir(), "dotnet-sdk", "RuntimeVersion.txt")
+
+	if _, err := os.Stat(dotnetCliFile); errors.Is(err, os.ErrNotExist) {
+		agi.Log.Debug("dotnet cli tool is not installed")
+		return false
+	}
+
+	if _, err := os.Stat(runtimeVersionsFile); errors.Is(err, os.ErrNotExist) {
+		agi.Log.Debug("dotnet runtime is not installed")
+		return false
+	}
+
+	versionFileContent, err := ioutil.ReadFile(runtimeVersionsFile)
+	if err != nil {
+		return false
+	}
+
+	return strings.HasPrefix(string(versionFileContent), "6.")
 }
 
 func (agi *AgentInstaller) selectDotnetVersions(manifest *libbuildpack.Manifest) (sdkVersion string, runtimeVersion string) {
