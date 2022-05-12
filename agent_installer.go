@@ -113,12 +113,14 @@ func (agi *AgentInstaller) selectDotnetVersions(manifest *libbuildpack.Manifest)
 	sdkVersions := manifest.AllDependencyVersions("dotnet-sdk")
 	sdkVersion, _ = libbuildpack.FindMatchingVersion("6.0.x", sdkVersions)
 	if sdkVersion == "" {
-		sdkVersion = "6.0.202"
+		agi.Log.Warning("Failed to resolve sdk version. 6.0.2 will be used")
+		sdkVersion = "6.0.2"
 	}
 
 	runtimeVersions := manifest.AllDependencyVersions("dotnet-runtime")
 	runtimeVersion, _ = libbuildpack.FindMatchingVersion("6.0.x", runtimeVersions)
 	if runtimeVersion == "" {
+		agi.Log.Warning("Failed to resolve runtime version. 6.0.3 will be used")
 		runtimeVersion = "6.0.3"
 	}
 
