@@ -14,32 +14,16 @@ type VcapServicesModel struct {
 
 type SealightsOptions struct {
 	Version                 string
-	Mode                    string
+	Verb                    string
+	CustomAgentUrl          string
+	CustomCommand           string
+	LabId                   string
 	Token                   string
 	TokenFile               string
 	BsId                    string
 	BsIdFile                string
-	Target                  string
-	WorkingDir              string
-	TargetArgs              string
-	ProfilerLogDir          string
-	ProfilerLogLevel        string
-	CustomAgentUrl          string
-	LabId                   string
-	Proxy                   string
-	ProxyUsername           string
-	ProxyPassword           string
-	IgnoreCertificateErrors string
-	Tools                   string
-	Tags                    string
-	NotCli                  string
-	AppName                 string
-	BranchName              string
-	BuildName               string
-	IncludeNamespace        string
-	WorkspacePath           string
-	IgnoreGeneratedCode     string
-	TestStage               string
+	ParseArgsFromCmd		string
+	SlArguments				map[string]string
 }
 
 type Configuration struct {
@@ -70,6 +54,13 @@ func (conf *Configuration) parseVcapServices() {
 		return
 	}
 
+	buildpackSpecificArguments := map[string]bool{
+		"version": true, 
+		"verb": true, 
+		"customAgentUrl": true,
+		"customCommand": true,
+	}
+
 	for _, services := range vcapServices {
 		for _, service := range services {
 			if !strings.Contains(strings.ToLower(service.Name), "sealights") {
@@ -83,50 +74,53 @@ func (conf *Configuration) parseVcapServices() {
 				return ""
 			}
 
+			slArguments := map[string]string{}
+			for parameterName, parameterValue := range service.Credentials {
+				_, shouldBeSkipped := buildpackSpecificArguments[parameterName]
+				if (shouldBeSkipped){
+					continue;
+				}
+
+				slArguments[parameterName] = parameterValue.(string)
+			}
+
 			options := &SealightsOptions{
 				Version:                 queryString("version"),
-				Mode:                    queryString("mode"), // default value is 'testListener'
+				Verb:                    queryString("verb"),
+				CustomAgentUrl:          queryString("customAgentUrl"),
+				CustomCommand:           queryString("customCommand"),
 				Token:                   queryString("token"),
 				TokenFile:               queryString("tokenFile"),
-				BsId:                    queryString("bsId"),
-				BsIdFile:                queryString("bsIdFile"),
-				Target:                  queryString("target"),
-				WorkingDir:              queryString("workingDir"),
-				TargetArgs:              queryString("targetArgs"),
-				ProfilerLogDir:          queryString("profilerLogDir"),
-				ProfilerLogLevel:        queryString("profilerLogLevel"),
-				CustomAgentUrl:          queryString("customAgentUrl"),
+				BsId:                    queryString("buildSessionId"),
+				BsIdFile:                queryString("buildSessionIdFile"),
 				LabId:                   queryString("labId"),
-				Proxy:                   queryString("proxy"),
-				ProxyUsername:           queryString("proxyUsername"),
-				ProxyPassword:           queryString("proxyPassword"),
-				IgnoreCertificateErrors: queryString("ignoreCertificateErrors"),
-				Tools:                   queryString("tools"),
-				Tags:                    queryString("tags"),
-				NotCli:                  queryString("notCli"),
-				AppName:                 queryString("appName"),
-				BranchName:              queryString("branchName"),
-				BuildName:               queryString("buildName"),
-				IncludeNamespace:        queryString("includeNamespace"),
-				WorkspacePath:           queryString("workspacePath"),
-				IgnoreGeneratedCode:     queryString("ignoreGeneratedCode"),
-				TestStage:               queryString("testStage"),
+				ParseArgsFromCmd:		 queryString("parseArgsFromCmd"),
 			}
 
 			isTokenProvided := options.Token != "" || options.TokenFile != ""
 			if !isTokenProvided {
 				conf.Log.Warning("Sealights access token isn't provided")
-				return
 			}
 
 			isSessionIdProvided := options.BsId != "" || options.BsIdFile != ""
 			if !isSessionIdProvided {
 				conf.Log.Warning("Sealights build session id isn't provided")
-				return
 			}
 
 			conf.Value = options
 			return
 		}
 	}
+}
+
+func (conf *Configuration) addProfilerConfiguration(agentPath string) string, error {
+	agentEnvFileName := "sealights.envrc"
+
+	conf.Log.Debug("Create file %s", agentEnvFileName)
+	envFile, err := os.OpenFile(dynatraceEnvPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, err
+	}
+
+    
 }
