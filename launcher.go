@@ -2,7 +2,9 @@ package sealights
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/cloudfoundry/libbuildpack"
@@ -55,6 +57,16 @@ func (la *Launcher) updateStartCommand(originalCommand string) string {
 
 	newCmd := parts[0] + la.buildCommandLine(parts[1])
 
+	testListenerSessionKey, sessionKeyExists := la.Options.SlArguments["testListenerSessionKey"]
+	if sessionKeyExists {
+		exportEnvCmd, err := la.addProfilerConfiguration(la.AgentDir, testListenerSessionKey)
+		if err != nil {
+			la.Log.Error("Sealights. Failed to parse arguments")
+			return originalCommand
+		}
+		newCmd = fmt.Sprintf("%s && %s && %s", newCmd, exportEnvCmd, parts[1])
+	}
+
 	return newCmd
 }
 
@@ -86,18 +98,18 @@ func (la *Launcher) buildCommandLine(command string) string {
 
 	if la.Options.ParseArgsFromCmd == "true" {
 		_, exists := la.Options.SlArguments["workingDir"]
-		if (!exists){
+		if !exists {
 			sb.WriteString(" --workingDir ${PWD}")
 		}
 
 		parsedTarget, parsedArgs := la.getTargetArgs(command)
 		_, exists = la.Options.SlArguments["target"]
-		if (!exists){
+		if !exists {
 			sb.WriteString(fmt.Sprintf(" --target %s", parsedTarget))
 		}
 
 		_, exists = la.Options.SlArguments["targetArgs"]
-		if (!exists){
+		if !exists {
 			sb.WriteString(fmt.Sprintf(" --targetArgs \"%s\"", parsedArgs))
 		}
 	}
@@ -125,4 +137,42 @@ func (la *Launcher) getTargetArgs(command string) (target string, args string) {
 	}
 
 	return
+}
+
+func (la *Launcher) addProfilerConfiguration(agentPath string, collectorId string) (string, error) {
+	agentEnvFileName := "sealights.envrc"
+	exportCommand := "export"
+	executeCommand := "source"
+
+	if runtime.GOOS == "windows" {
+		agentEnvFileName = "sealights.bat"
+		exportCommand = "set"
+		executeCommand = "call"
+	}
+
+	la.Log.Debug(fmt.Sprintf("Create file %s", agentEnvFileName))
+
+	agentEnvFile := filepath.Join(agentPath, agentEnvFileName)
+	file, err := os.OpenFile(agentEnvFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", err
+	}
+
+	agentProfilerLibx86 := filepath.Join(agentPath, "SL.DotNet.ProfilerLib_x86.dll")
+	agentProfilerLibx64 := filepath.Join(agentPath, "SL.DotNet.ProfilerLib_x64.dll")
+
+	fileContent := ""
+
+	fileContent += fmt.Sprintf("%s Cor_Profiler={01CA2C22-DC03-4FF5-8350-59E32A3536BAHOME}\n", exportCommand)
+	fileContent += fmt.Sprintf("%s Cor_Enable_Profiling=1\n", exportCommand)
+	fileContent += fmt.Sprintf("%s Cor_Profiler_Path=%s\n", exportCommand, agentProfilerLibx64)
+	fileContent += fmt.Sprintf("%s COR_PROFILER_PATH_32=%s\n", exportCommand, agentProfilerLibx86)
+	fileContent += fmt.Sprintf("%s COR_PROFILER_PATH_64=%s\n", exportCommand, agentProfilerLibx64)
+	fileContent += fmt.Sprintf("%s SeaLights_CollectorId=%s\n", exportCommand, collectorId)
+
+	if _, err = file.WriteString(fileContent); err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s %s", executeCommand, agentEnvFile), nil
 }

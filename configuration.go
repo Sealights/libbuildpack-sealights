@@ -13,17 +13,20 @@ type VcapServicesModel struct {
 }
 
 type SealightsOptions struct {
-	Version                 string
-	Verb                    string
-	CustomAgentUrl          string
-	CustomCommand           string
-	LabId                   string
-	Token                   string
-	TokenFile               string
-	BsId                    string
-	BsIdFile                string
-	ParseArgsFromCmd		string
-	SlArguments				map[string]string
+	Version          string
+	Verb             string
+	CustomAgentUrl   string
+	CustomCommand    string
+	LabId            string
+	Token            string
+	TokenFile        string
+	BsId             string
+	BsIdFile         string
+	ParseArgsFromCmd string
+	Proxy            string
+	ProxyUsername    string
+	ProxyPassword    string
+	SlArguments      map[string]string
 }
 
 type Configuration struct {
@@ -55,10 +58,10 @@ func (conf *Configuration) parseVcapServices() {
 	}
 
 	buildpackSpecificArguments := map[string]bool{
-		"version": true, 
-		"verb": true, 
+		"version":        true,
+		"verb":           true,
 		"customAgentUrl": true,
-		"customCommand": true,
+		"customCommand":  true,
 	}
 
 	for _, services := range vcapServices {
@@ -77,24 +80,27 @@ func (conf *Configuration) parseVcapServices() {
 			slArguments := map[string]string{}
 			for parameterName, parameterValue := range service.Credentials {
 				_, shouldBeSkipped := buildpackSpecificArguments[parameterName]
-				if (shouldBeSkipped){
-					continue;
+				if shouldBeSkipped {
+					continue
 				}
 
 				slArguments[parameterName] = parameterValue.(string)
 			}
 
 			options := &SealightsOptions{
-				Version:                 queryString("version"),
-				Verb:                    queryString("verb"),
-				CustomAgentUrl:          queryString("customAgentUrl"),
-				CustomCommand:           queryString("customCommand"),
-				Token:                   queryString("token"),
-				TokenFile:               queryString("tokenFile"),
-				BsId:                    queryString("buildSessionId"),
-				BsIdFile:                queryString("buildSessionIdFile"),
-				LabId:                   queryString("labId"),
-				ParseArgsFromCmd:		 queryString("parseArgsFromCmd"),
+				Version:          queryString("version"),
+				Verb:             queryString("verb"),
+				CustomAgentUrl:   queryString("customAgentUrl"),
+				CustomCommand:    queryString("customCommand"),
+				Token:            queryString("token"),
+				TokenFile:        queryString("tokenFile"),
+				BsId:             queryString("buildSessionId"),
+				BsIdFile:         queryString("buildSessionIdFile"),
+				LabId:            queryString("labId"),
+				ParseArgsFromCmd: queryString("parseArgsFromCmd"),
+				Proxy:            queryString("proxy"),
+				ProxyUsername:    queryString("proxyUsername"),
+				ProxyPassword:    queryString("proxyPassword"),
 			}
 
 			isTokenProvided := options.Token != "" || options.TokenFile != ""
@@ -111,16 +117,4 @@ func (conf *Configuration) parseVcapServices() {
 			return
 		}
 	}
-}
-
-func (conf *Configuration) addProfilerConfiguration(agentPath string) string, error {
-	agentEnvFileName := "sealights.envrc"
-
-	conf.Log.Debug("Create file %s", agentEnvFileName)
-	envFile, err := os.OpenFile(dynatraceEnvPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, err
-	}
-
-    
 }
