@@ -37,8 +37,6 @@ func (la *Launcher) ModifyStartParameters(stager *libbuildpack.Stager) error {
 	startCommand := releaseInfo.GetStartCommand()
 	newStartCommand := la.updateStartCommand(startCommand)
 
-	la.Log.Debug("ModifyStartParameters")
-
 	la.setEnvVariablesGlobally()
 
 	shouldApply := la.Options.Verb != "" || la.Options.CustomCommand != ""

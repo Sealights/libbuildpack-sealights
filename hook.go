@@ -31,7 +31,7 @@ func NewHook() libbuildpack.Hook {
 // AfterCompile downloads and installs the Sealights agent, and modify application start command
 func (h *SealightsHook) AfterCompile(stager *libbuildpack.Stager) error {
 
-	h.Log.Debug("Sealights. Check servicec status...")
+	h.Log.Debug("Sealights. Check service status...")
 
 	conf := NewConfiguration(h.Log, stager)
 	if !conf.UseSealights() {
